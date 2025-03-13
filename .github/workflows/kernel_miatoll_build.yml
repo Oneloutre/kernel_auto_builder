@@ -105,13 +105,17 @@ jobs:
           export KBUILD_BUILD_HOST="Caelum-Github-actions-Onelots"
 
           make O=out ARCH=arm64 vendor/xiaomi/miatoll_defconfig vendor/kernelsu.config V=1
-          yes "" | make O=out ARCH=arm64 olddefconfig
+          make O=out ARCH=arm64 olddefconfig
 
           make -j$(nproc --all) O=out \
           ARCH=arm64 \
           CC="ccache clang" \
-          LLVM=1 \
-          LLVM_IAS=1 \
+          LD=ld.lld \
+          AR=llvm-ar \
+          NM=llvm-nm \
+          STRIP=llvm-strip \
+          OBJCOPY=llvm-objcopy \
+          OBJDUMP=llvm-objdump
           CLANG_TRIPLE=aarch64-linux-gnu- \
           CROSS_COMPILE=aarch64-linux-android- \
           CROSS_COMPILE_ARM32=arm-linux-androideabi-
