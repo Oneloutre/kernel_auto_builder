@@ -1,0 +1,166 @@
+name: Build KernelSU-Next for Laurel_Sprout
+
+on:
+  push:
+    branches:
+      - laurel_sprout
+  pull_request:
+    branches:
+      - laurel_sprout
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: 📂 Checkout builder's sourcecode and get files
+        uses: actions/checkout@v4
+ 
+      - name: ⚡ Checkout kernel's sourcecode and clone submodules
+        run: |
+          git clone https://github.com/Onelots-Devices-Playground/kernel_laurel_sprout_sm8150 kernel_xiaomi_sm6125 -b vic
+
+      - name: 📅 Export date of build
+        run: |
+          echo "DATE=$(date +%d%m%Y)" >> $GITHUB_ENV
+
+      - name: 🔄 Update KernelSU-Next
+        run: |
+          cd kernel_xiaomi_sm6125
+          rm -rf KernelSU-Next
+          git clone https://github.com/KernelSU-Next/KernelSU-Next
+
+      - name: 📥 Clone AnyKernel3
+        run: |
+          cd kernel_xiaomi_sm6125
+          git clone -b laurel_sprout https://github.com/Oneloutre/AnyKernel3.git anykernel
+          rm -rf anykernel/.git
+
+      - name: 📦 Install dépendencies
+        run: |
+          sudo apt-get update -y -qq
+          sudo apt-get install -y --no-install-recommends \
+          python3-pip \
+          git \
+          zip \
+          unzip \
+          gcc \
+          g++ \
+          make \
+          ninja-build \
+          file \
+          bc \
+          bison \
+          flex \
+          libfl-dev \
+          libssl-dev \
+          libelf-dev \
+          wget \
+          build-essential \
+          python3-dev \
+          python3-setuptools \
+          rsync \
+          ccache \
+          llvm-dev
+          sudo apt install flex libncurses6 libncurses5 binutils-aarch64-linux-gnu device-tree-compiler \
+          android-sdk-libsparse-utils
+          sudo apt install -y gcc-arm-linux-gnueabi
+          echo "CROSS_COMPILE_ARM32=arm-linux-gnueabi-" >> $GITHUB_ENV
+
+      - name: 🔧 Install Clang from a Github action
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "18.1.8"
+          directory: ${{ runner.temp }}/llvm
+
+      - name: 🔧 Add Clang to the PATH
+        run: |
+          echo "${{ runner.temp }}/llvm/bin" >> $GITHUB_PATH
+
+      - name: 🔍 Device's codename and kernel's version
+        run: |
+          cd kernel_xiaomi_sm6125
+          DEVICE_CODENAME=laurel_sprout
+          KERNEL_VERSION=$(make kernelversion)
+
+          echo "Device Codename: $DEVICE_CODENAME"
+          echo "Kernel Version: $KERNEL_VERSION"
+
+          echo "DEVICE_CODENAME=$DEVICE_CODENAME" >> $GITHUB_ENV
+          echo "KERNEL_VERSION=$KERNEL_VERSION" >> $GITHUB_ENV
+
+      - name: 🚀 Enable ccache to speed the build up
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          max-size: 7G
+
+      - name: 🛠️ Build the kramel
+        run: |
+          cd kernel_xiaomi_sm6125
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export KBUILD_COMPILER_STRING=$(clang --version | head -n 1)
+          export CCACHE_EXEC=$(which ccache)
+          export KBUILD_BUILD_HOST="Github-actions-Onelots"
+
+          echo "CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE=y" >> arch/arm64/configs/vendor/laurel_sprout-perf_defconfig
+
+          make O=out ARCH=arm64 vendor/laurel_sprout-perf_defconfig vendor/kernelsu.config V=1
+          yes "" | make O=out ARCH=arm64 olddefconfig
+
+          make -j$(nproc --all) O=out \
+          ARCH=arm64 \
+          CC="ccache clang" \
+          LLVM=1 \
+          LLVM_IAS=1 \
+          CLANG_TRIPLE=aarch64-linux-gnu- \
+          CROSS_COMPILE=aarch64-linux-android- \
+          CROSS_COMPILE_ARM32=arm-linux-androideabi-
+
+      - name: 🚀 Copy the compiled kernel to AnyKernel3 then create the zip
+        run: |
+          cd kernel_xiaomi_sm6125
+          ZIP_NAME="Kernel-Caelum-${DEVICE_CODENAME}-${KERNEL_VERSION}-$(date +%d%m%Y).zip"
+
+          cp out/arch/arm64/boot/Image.gz-dtb anykernel/
+
+          cd anykernel && zip -r9 $ZIP_NAME ./*
+          mv $ZIP_NAME ../../
+
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+
+
+      - name: 🤌 Copy zip file to get 2 different zip files
+        run: |
+
+          ZIP_ALTERNATIVE="KernelSU-Next-Caelum-${DEVICE_CODENAME}-latest.zip"
+          cp ${ZIP_NAME} $ZIP_ALTERNATIVE
+
+          echo "Copied ${ZIP_NAME} as $ZIP_ALTERNATIVE"
+          echo "ZIP_ALTERNATIVE=$ZIP_ALTERNATIVE" >> $GITHUB_ENV
+          
+      - name: 📤 Publish github release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ZIP_ALTERNATIVE }}
+          tag_name: "latest"
+          draft: false
+          prerelease: false
+
+      - name: 📤 Publish with tag associated to the kernel and the date
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ZIP_NAME }}
+          tag_name: Kernel-Caelum-${{ env.DEVICE_CODENAME }}-${{ env.KERNEL_VERSION }}-${{ env.DATE }}
+          draft: false
+          prerelease: false
+
+      - name: 🚀 Notify people on Discord
+        env:
+          DEVICE_CODENAME: ${{ env.DEVICE_CODENAME }}
+          KERNEL_VERSION: ${{ env.KERNEL_VERSION }}
+          WEBHOOK: ${{ secrets.WEBHOOK }}
+          NAME: ${{ env.ZIP_NAME }}
+        run: |
+          python3 .github/webhook.py
