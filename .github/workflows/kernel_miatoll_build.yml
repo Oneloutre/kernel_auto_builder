@@ -63,6 +63,7 @@ jobs:
           export KBUILD_COMPILER_STRING=$(clang --version | head -n 1)
           export CCACHE_EXEC=$(which ccache)
           export KBUILD_BUILD_HOST="Caelum-Github-actions-Onelots"
+          export LLVM_IAS=1
 
           make O=out ARCH=arm64 vendor/xiaomi/miatoll_defconfig vendor/kernelsu.config V=1
           make O=out ARCH=arm64 olddefconfig
