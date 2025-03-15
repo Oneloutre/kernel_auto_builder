@@ -17,6 +17,11 @@ jobs:
     steps:
       - name: 📂 Checkout builder's sourcecode and get files
         uses: actions/checkout@v4
+
+      - name: 📦 Install missing dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y cpio
  
       - name: ⚡ Checkout kernel's sourcecode and clone submodules
         run: |
