@@ -20,8 +20,8 @@ jobs:
 
       - name: 📦 Install missing dependencies
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y cpio
+          apt-get update -y
+          apt-get install -y cpio device-tree-compiler
  
       - name: ⚡ Checkout kernel's sourcecode and clone submodules
         run: |

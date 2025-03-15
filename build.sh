@@ -10,7 +10,7 @@ if [ -z "$DEVICE_CODENAME" ]; then
     exit 1
 fi
 
-cd kernel/xiaomi/sm6250
+cd kernel_xiaomi_sm6250
 
 # Export required variables
 export ARCH=arm64
