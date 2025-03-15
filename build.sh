@@ -24,6 +24,7 @@ export LLVM_IAS=1
 make O=out ARCH=arm64 vendor/xiaomi/miatoll_defconfig vendor/kernelsu.config
 yes "" | make O=out ARCH=arm64 olddefconfig
 ./scripts/config --file out/.config -e CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE
+make O=out ARCH=arm64 oldconfig
 
 # Build kernel
 make -j$(nproc --all) O=out \
