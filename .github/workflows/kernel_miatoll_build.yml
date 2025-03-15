@@ -55,32 +55,9 @@ jobs:
         with:
           max-size: 7G
 
-      - name: 🛠️ Build the kernel
+      - name: 🛠️ Build the kramel
         run: |
-          cd kernel_xiaomi_sm6250
-          export ARCH=arm64
-          export SUBARCH=arm64
-          export KBUILD_COMPILER_STRING=$(clang --version | head -n 1)
-          export CCACHE_EXEC=$(which ccache)
-          export KBUILD_BUILD_HOST="Caelum-Github-actions-Onelots"
-          export LLVM_IAS=1
-
-          make O=out ARCH=arm64 vendor/xiaomi/miatoll_defconfig vendor/kernelsu.config V=1
-          make O=out ARCH=arm64 olddefconfig
-
-          make -j$(nproc --all) O=out \
-          ARCH=arm64 \
-          CC="ccache clang" \
-          LD=ld.lld \
-          AR=llvm-ar \
-          NM=llvm-nm \
-          STRIP=llvm-strip \
-          OBJCOPY=llvm-objcopy \
-          OBJDUMP=llvm-objdump \
-          CLANG_TRIPLE=aarch64-linux-gnu- \
-          CROSS_COMPILE=aarch64-linux-android- \
-          CROSS_COMPILE_ARM32=arm-linux-androideabi-
-
+          ./build.sh miatoll
 
       - name: 🚀 Copy the compiled kernel to AnyKernel3 then create the zip
         run: |
@@ -93,7 +70,6 @@ jobs:
           mv $ZIP_NAME ../../
 
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-
 
       - name: 🤌 Copy zip file to get 2 different zip files
         run: |
