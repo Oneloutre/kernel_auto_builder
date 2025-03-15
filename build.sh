@@ -19,10 +19,10 @@ export KBUILD_COMPILER_STRING=$(clang --version | head -n 1)
 export CCACHE_EXEC=$(which ccache)
 export KBUILD_BUILD_HOST="Caelum-Github-actions-Onelots"
 export LLVM_IAS=1
+export CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE=y
 
 # Configure kernel     
 make O=out ARCH=arm64 vendor/xiaomi/miatoll_defconfig vendor/kernelsu.config
-./scripts/config --file out/.config -e CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE
 yes "" | make O=out ARCH=arm64 olddefconfig
 
 # Build kernel
