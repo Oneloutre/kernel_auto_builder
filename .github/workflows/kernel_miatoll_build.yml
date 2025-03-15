@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    container: ghcr.io/tedomi2705/kernel_builder_image:add66d0d23793d248ded65da8779b676a3faebe6
+    container: ghcr.io/tedomi2705/kernel_builder_image:latest
 
     steps:
       - name: 📂 Checkout builder's sourcecode and get files
@@ -55,7 +55,7 @@ jobs:
         with:
           max-size: 7G
 
-      - name: 🛠️ Build the kramel
+      - name: 🛠️ Build the kernel
         run: |
           cd kernel_xiaomi_sm6250
           export ARCH=arm64
@@ -75,10 +75,11 @@ jobs:
           NM=llvm-nm \
           STRIP=llvm-strip \
           OBJCOPY=llvm-objcopy \
-          OBJDUMP=llvm-objdump
+          OBJDUMP=llvm-objdump \
           CLANG_TRIPLE=aarch64-linux-gnu- \
           CROSS_COMPILE=aarch64-linux-android- \
           CROSS_COMPILE_ARM32=arm-linux-androideabi-
+
 
       - name: 🚀 Copy the compiled kernel to AnyKernel3 then create the zip
         run: |
