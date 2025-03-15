@@ -21,7 +21,7 @@ export KBUILD_BUILD_HOST="Caelum-Github-actions-Onelots"
 export LLVM_IAS=1
 
 # Configure kernel     
-make O=out ARCH=arm64 vendor/xiaomi/miatoll_defconfig vendor/kernelsu.config V=1
+make O=out ARCH=arm64 vendor/xiaomi/miatoll_defconfig vendor/kernelsu.config
 make O=out ARCH=arm64 olddefconfig
 
 # Build kernel
@@ -36,4 +36,5 @@ make -j$(nproc --all) O=out \
     OBJDUMP=llvm-objdump \
     CLANG_TRIPLE=aarch64-linux-gnu- \
     CROSS_COMPILE=aarch64-linux-android- \
-    CROSS_COMPILE_ARM32=arm-linux-androideabi-
+    CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+    V=1
