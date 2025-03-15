@@ -22,9 +22,8 @@ export LLVM_IAS=1
 
 # Configure kernel     
 make O=out ARCH=arm64 vendor/xiaomi/miatoll_defconfig vendor/kernelsu.config
-yes "" | make O=out ARCH=arm64 olddefconfig
 ./scripts/config --file out/.config -e CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE
-make O=out ARCH=arm64 oldconfig
+yes "" | make O=out ARCH=arm64 olddefconfig
 
 # Build kernel
 make -j$(nproc --all) O=out \
@@ -38,5 +37,4 @@ make -j$(nproc --all) O=out \
     OBJDUMP=llvm-objdump \
     CLANG_TRIPLE=aarch64-linux-gnu- \
     CROSS_COMPILE=aarch64-linux-android- \
-    CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-    V=1
+    CROSS_COMPILE_ARM32=arm-linux-androideabi- 
