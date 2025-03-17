@@ -25,11 +25,7 @@ jobs:
       - name: 📅 Export date of build
         run: |
           echo "DATE=$(date +%d%m%Y)" >> $GITHUB_ENV
-      
-      - name: 🐍 Install Python's dependencies
-        run: |
-          python3 -m pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org requests
-
+   
       - name: 🔄 Update KernelSU-Next
         run: |
           cd kernel_xiaomi_sm6250
@@ -104,11 +100,19 @@ jobs:
           draft: false
           prerelease: false
 
+  notification:
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+
+      - name: 📂 Checkout builder's sourcecode and get files
+        uses: actions/checkout@v4
+
       - name: 🚀 Notify people on Discord
         env:
-          DEVICE_CODENAME: ${{ env.DEVICE_CODENAME }}
-          KERNEL_VERSION: ${{ env.KERNEL_VERSION }}
+          DEVICE_CODENAME: miatoll
+          KERNEL_VERSION: 4.14.336
           WEBHOOK: ${{ secrets.WEBHOOK }}
-          NAME: ${{ env.ZIP_NAME }}
+          NAME: Kernel-Caelum-miatoll-4.14.336.zip
         run: |
           python3 .github/webhook.py
